@@ -3,7 +3,7 @@ import json
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db.models import Count, Avg
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -74,7 +74,8 @@ class VacancyDetailView(DetailView):
             "slug": vacancy.slug,
             "status": vacancy.status,
             "created": vacancy.created,
-            "user": vacancy.user_id
+            "user": vacancy.user_id,
+            "skills": list(map(str, vacancy.skills.all())),
         })
 
 
@@ -88,15 +89,40 @@ class VacancyCreateView(CreateView):
         vacancy_data = json.loads(request.body)
 
         vacancy = Vacancy.objects.create(
-            user_id = vacancy_data["user_id"],
+            # user_id = vacancy_data["user_id"],
             slug = vacancy_data["slug"],
             text = vacancy_data["text"],
             status = vacancy_data["status"]
         )
 
+        vacancy.user = get_object_or_404(User, pk=vacancy_data["user_id"])
+
+        # for skill in vacancy_data["skills"]:
+        #     try:
+        #         skill_obj = Skill.objects.get(name=skill)
+        #     except Skill.DoesNotExist:
+        #         skill_obj = Skill.objects.create(name=skill)
+        #     vacancy.skills.add(skill_obj)
+        # vacancy.save()
+
+           # тоже самое
+        for skill in vacancy_data["skills"]:
+            skill_obj, created = Skill.objects.get_or_create(
+                name=skill,
+                defaults={
+                    "is_active": True
+                }
+            )
+            vacancy.skills.add(skill_obj)
+        vacancy.save()
+
         return JsonResponse({
             "id": vacancy.id,
-            "text": vacancy.text
+            "text": vacancy.text,
+            "slug": vacancy.slug,
+            "status": vacancy.status,
+            "created": vacancy.created,
+            "user": vacancy.user_id
         })
 
 
