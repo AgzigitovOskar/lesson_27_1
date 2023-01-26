@@ -1,6 +1,8 @@
 import json
 
+from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from django.db.models import Count, Avg
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
@@ -135,4 +137,30 @@ class VacancyDeleteView(DeleteView):
         super().delete(request, *args, **kwargs)
 
         return JsonResponse({"status": "ok"}, status=200)
+
+
+class UserVacancyDetailView(View):
+    def get(self, request):
+        user_qs = User.objects.annotate(vacancies=Count('vacancy'))
+
+        paginator = Paginator(user_qs, settings.TOTAL_ON_PAGE)
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+
+        users = []
+        for user in page_obj:
+            users.append({
+                "id": user.id,
+                "name": user.username,
+                "vacancies": user.vacancies
+            })
+
+        response ={
+            "items": users,
+            "total": paginator.count,
+            "num_pages": paginator.num_pages,
+            "avg": user_qs.aggregate(avg=Avg('vacancies'))["avg"]
+        }
+
+        return JsonResponse(response)
 
