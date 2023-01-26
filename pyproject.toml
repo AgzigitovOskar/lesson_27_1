@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "lesson-27-1"
+version = "0.1.0"
+description = ""
+authors = ["Oskar Agzigitov <110802094+AgzigitovOskar@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "lesson_27_1"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+django = "^4.1.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
