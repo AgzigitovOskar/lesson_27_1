@@ -133,24 +133,23 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 TOTAL_ON_PAGE =10
 
 
-
 LOGGING = {
     'disable_existing_loggers': False,
     'version': 1,
     'handlers': {
         'console': {
             # logging handler that outputs Log messages to terminal
-            'class': 'Logging.StreamHandler',
-            'Level': 'DEBUG',  # message Level to be written to console
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG',  # message Level to be written to console
         },
     },
-    'Loggers': {
+    'loggers': {
         '': {
             # this sets root Level Logger to log debug and higher level
             # logs to console. All other loggers inherit settings from
             # root Level logger.
             'handlers': ['console'],
-            'Level': 'DEBUG',
+            'level': 'DEBUG',
             'propagate': False, # this tells Logger to send logging message
                                 # to its parent (will send if set to True)
         },
