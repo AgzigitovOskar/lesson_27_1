@@ -12,6 +12,7 @@ from django.views.generic import DetailView, ListView, CreateView, UpdateView, D
 
 from hunting import settings
 from vacancies.models import Vacancy, Skill
+from vacancies.serializers import VacancySerializer, VacancyDetailSerializer
 
 
 def hello(request):
@@ -41,20 +42,21 @@ class VacancyListView(ListView):
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
 
-        vacancies = []
-        for vacancy in page_obj:
-            vacancies.append({
-                "id": vacancy.id,
-                "text": vacancy.text,
-                "slug": vacancy.slug,
-                "status": vacancy.status,
-                "created": vacancy.created,
-                "username": vacancy.user.username,
-                "skills": list(map(str, vacancy.skills.all())),
-            })
+        # vacancies = []
+        # for vacancy in page_obj:
+        #     vacancies.append({
+        #         "id": vacancy.id,
+        #         "text": vacancy.text,
+        #         "slug": vacancy.slug,
+        #         "status": vacancy.status,
+        #         "created": vacancy.created,
+        #         "username": vacancy.user.username,
+        #         "skills": list(map(str, vacancy.skills.all())),
+        #     })
+        list(map(lambda x: setattr(x, "username", x.user.username if x.user else None), page_obj))
 
         response = {
-            "items": vacancies,
+            "items": VacancySerializer(page_obj, many=True).data,
             "num_pages": paginator.num_pages,
             "total": paginator.count
         }
@@ -68,15 +70,7 @@ class VacancyDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         vacancy = self.get_object()
 
-        return JsonResponse({
-            "id": vacancy.id,
-            "text": vacancy.text,
-            "slug": vacancy.slug,
-            "status": vacancy.status,
-            "created": vacancy.created,
-            "user": vacancy.user_id,
-            "skills": list(map(str, vacancy.skills.all())),
-        })
+        return JsonResponse(VacancyDetailSerializer(vacancy).data)
 
 
 
@@ -90,9 +84,9 @@ class VacancyCreateView(CreateView):
 
         vacancy = Vacancy.objects.create(
             # user_id = vacancy_data["user_id"],
-            slug = vacancy_data["slug"],
-            text = vacancy_data["text"],
-            status = vacancy_data["status"]
+            slug=vacancy_data["slug"],
+            text=vacancy_data["text"],
+            status=vacancy_data["status"]
         )
 
         vacancy.user = get_object_or_404(User, pk=vacancy_data["user_id"])
